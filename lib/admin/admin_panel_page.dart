@@ -31,8 +31,346 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
   final Color secondaryColor = const Color(0xFF2C2B5B);
   final Color bgColor = const Color(0xFFF6F2FF);
 
+  // Arama ve filtreleme için state
+  String _searchQuery = '';
+  List<String> _selectedCategories = [];
+  List<ExpenseReportStatus> _selectedStatuses = [];
+  DateTime? _startDate;
+  DateTime? _endDate;
+  RangeValues _amountRange = const RangeValues(0, 10000);
+
   List<ExpenseReport> _filterByCategory(String category) {
     return widget.allReports.where((r) => r.category == category).toList();
+  }
+
+  List<ExpenseReport> _getFilteredReports() {
+    List<ExpenseReport> filtered = widget.allReports;
+
+    // Arama filtresi
+    if (_searchQuery.isNotEmpty) {
+      filtered = filtered.where((report) =>
+        report.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+        report.category.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+        (report.expenses.isNotEmpty && 
+         report.expenses.first.desc.toLowerCase().contains(_searchQuery.toLowerCase()))
+      ).toList();
+    }
+
+    // Kategori filtresi
+    if (_selectedCategories.isNotEmpty) {
+      filtered = filtered.where((report) => 
+        _selectedCategories.contains(report.category)
+      ).toList();
+    }
+
+    // Durum filtresi
+    if (_selectedStatuses.isNotEmpty) {
+      filtered = filtered.where((report) => 
+        _selectedStatuses.contains(report.status)
+      ).toList();
+    }
+
+    // Tarih filtresi
+    if (_startDate != null || _endDate != null) {
+      filtered = filtered.where((report) {
+        if (report.expenses.isEmpty) return false;
+        final reportDate = report.expenses.first.date;
+        if (_startDate != null && reportDate.isBefore(_startDate!)) return false;
+        if (_endDate != null && reportDate.isAfter(_endDate!)) return false;
+        return true;
+      }).toList();
+    }
+
+    // Tutar filtresi
+    filtered = filtered.where((report) {
+      final amount = report.totalAmount;
+      return amount >= _amountRange.start && amount <= _amountRange.end;
+    }).toList();
+
+    return filtered;
+  }
+
+  void _showFilterModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Container(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Filtreleme',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          TextButton(
+                            onPressed: () {
+                              setState(() {
+                                _selectedCategories.clear();
+                                _selectedStatuses.clear();
+                                _startDate = null;
+                                _endDate = null;
+                                _amountRange = const RangeValues(0, 10000);
+                              });
+                            },
+                            child: const Text(
+                              'Temizle',
+                              style: TextStyle(
+                                color: Colors.red,
+                                fontFamily: 'Inter',
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              this.setState(() {});
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: mainColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: const Text(
+                              'Uygula',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontFamily: 'Inter',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Kategori filtresi
+                  const Text(
+                    'Kategoriler',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: categories.map((category) {
+                      final isSelected = _selectedCategories.contains(category);
+                      return FilterChip(
+                        label: Text(
+                          category,
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : Colors.black87,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          setState(() {
+                            if (selected) {
+                              _selectedCategories.add(category);
+                            } else {
+                              _selectedCategories.remove(category);
+                            }
+                          });
+                        },
+                        backgroundColor: Colors.grey.shade200,
+                        selectedColor: mainColor,
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Durum filtresi
+                  const Text(
+                    'Durumlar',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      FilterChip(
+                        label: const Text(
+                          'Bekliyor',
+                          style: TextStyle(fontFamily: 'Inter'),
+                        ),
+                        selected: _selectedStatuses.contains(ExpenseReportStatus.sent),
+                        onSelected: (selected) {
+                          setState(() {
+                            if (selected) {
+                              _selectedStatuses.add(ExpenseReportStatus.sent);
+                            } else {
+                              _selectedStatuses.remove(ExpenseReportStatus.sent);
+                            }
+                          });
+                        },
+                        backgroundColor: Colors.orange.shade100,
+                        selectedColor: Colors.orange,
+                      ),
+                      FilterChip(
+                        label: const Text(
+                          'Onaylandı',
+                          style: TextStyle(fontFamily: 'Inter'),
+                        ),
+                        selected: _selectedStatuses.contains(ExpenseReportStatus.approved),
+                        onSelected: (selected) {
+                          setState(() {
+                            if (selected) {
+                              _selectedStatuses.add(ExpenseReportStatus.approved);
+                            } else {
+                              _selectedStatuses.remove(ExpenseReportStatus.approved);
+                            }
+                          });
+                        },
+                        backgroundColor: Colors.green.shade100,
+                        selectedColor: Colors.green,
+                      ),
+                      FilterChip(
+                        label: const Text(
+                          'Reddedildi',
+                          style: TextStyle(fontFamily: 'Inter'),
+                        ),
+                        selected: _selectedStatuses.contains(ExpenseReportStatus.rejected),
+                        onSelected: (selected) {
+                          setState(() {
+                            if (selected) {
+                              _selectedStatuses.add(ExpenseReportStatus.rejected);
+                            } else {
+                              _selectedStatuses.remove(ExpenseReportStatus.rejected);
+                            }
+                          });
+                        },
+                        backgroundColor: Colors.red.shade100,
+                        selectedColor: Colors.red,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Tutar aralığı
+                  const Text(
+                    'Tutar Aralığı',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  RangeSlider(
+                    values: _amountRange,
+                    min: 0,
+                    max: 10000,
+                    divisions: 100,
+                    labels: RangeLabels(
+                      '₺${_amountRange.start.round()}',
+                      '₺${_amountRange.end.round()}',
+                    ),
+                    onChanged: (values) {
+                      setState(() {
+                        _amountRange = values;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Tarih aralığı
+                  const Text(
+                    'Tarih Aralığı',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton.icon(
+                          onPressed: () async {
+                            final date = await showDatePicker(
+                              context: context,
+                              initialDate: _startDate ?? DateTime.now(),
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime.now(),
+                            );
+                            if (date != null) {
+                              setState(() {
+                                _startDate = date;
+                              });
+                            }
+                          },
+                          icon: const Icon(Icons.calendar_today),
+                          label: Text(
+                            _startDate == null 
+                                ? 'Başlangıç' 
+                                : '${_startDate!.day}/${_startDate!.month}/${_startDate!.year}',
+                            style: const TextStyle(fontFamily: 'Inter'),
+                          ),
+                        ),
+                      ),
+                      const Text(' - ', style: TextStyle(fontFamily: 'Inter')),
+                      Expanded(
+                        child: TextButton.icon(
+                          onPressed: () async {
+                            final date = await showDatePicker(
+                              context: context,
+                              initialDate: _endDate ?? DateTime.now(),
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime.now(),
+                            );
+                            if (date != null) {
+                              setState(() {
+                                _endDate = date;
+                              });
+                            }
+                          },
+                          icon: const Icon(Icons.calendar_today),
+                          label: Text(
+                            _endDate == null 
+                                ? 'Bitiş' 
+                                : '${_endDate!.day}/${_endDate!.month}/${_endDate!.year}',
+                            style: const TextStyle(fontFamily: 'Inter'),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   void _changeStatus(ExpenseReport report, ExpenseReportStatus newStatus, {String? rejectionReason}) {
@@ -82,6 +420,8 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
 
   @override
   Widget build(BuildContext context) {
+    final filteredReports = _getFilteredReports();
+    
     return Scaffold(
       backgroundColor: bgColor,
       appBar: PreferredSize(
@@ -125,71 +465,137 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
           ),
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: categories.map((category) {
-          final categoryReports = _filterByCategory(category);
-          return Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
+      body: Column(
+        children: [
+          // Arama çubuğu
+          Container(
+            padding: const EdgeInsets.all(20),
+            child: TextField(
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value;
+                });
+              },
+              decoration: InputDecoration(
+                hintText: 'Masraf ara...',
+                hintStyle: TextStyle(
+                  color: Colors.grey.shade500,
+                  fontFamily: 'Inter',
                 ),
-              ],
+                prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.filter_list, color: Colors.grey),
+                  onPressed: _showFilterModal,
+                ),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ),
             ),
-            child: ExpansionTile(
-              title: Row(
+          ),
+          
+          // Filtre bilgisi
+          if (_searchQuery.isNotEmpty || _selectedCategories.isNotEmpty || 
+              _selectedStatuses.isNotEmpty || _startDate != null || _endDate != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: Row(
                 children: [
-                  Expanded(
+                  Icon(Icons.filter_list, size: 16, color: mainColor),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${filteredReports.length} sonuç bulundu',
+                    style: TextStyle(
+                      color: mainColor,
+                      fontSize: 14,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _searchQuery = '';
+                        _selectedCategories.clear();
+                        _selectedStatuses.clear();
+                        _startDate = null;
+                        _endDate = null;
+                        _amountRange = const RangeValues(0, 10000);
+                      });
+                    },
                     child: Text(
-                      category,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
+                      'Temizle',
+                      style: TextStyle(
+                        color: mainColor,
+                        fontSize: 14,
                         fontFamily: 'Inter',
                       ),
                     ),
                   ),
-                  if (categoryReports.isNotEmpty)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: mainColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        categoryReports.length.toString(),
-                        style: TextStyle(
-                          color: mainColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
                 ],
               ),
-              initiallyExpanded: categoryReports.isNotEmpty,
-              children: categoryReports.isEmpty
-                  ? [
-                      const ListTile(
-                        title: Text(
-                          'Kayıt yok',
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontFamily: 'Inter',
+            ),
+          
+          // Liste
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.all(20),
+              children: categories.map((category) {
+                final categoryReports = filteredReports.where((r) => r.category == category).toList();
+                if (categoryReports.isEmpty) return const SizedBox.shrink();
+                
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ExpansionTile(
+                    title: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            category,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                              fontFamily: 'Inter',
+                            ),
                           ),
                         ),
-                      ),
-                    ]
-                  : categoryReports.map((report) {
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: mainColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            categoryReports.length.toString(),
+                            style: TextStyle(
+                              color: mainColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    initiallyExpanded: categoryReports.isNotEmpty,
+                    children: categoryReports.map((report) {
                       return Container(
                         margin: const EdgeInsets.symmetric(
                           horizontal: 12,
@@ -274,9 +680,12 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                         ),
                       );
                     }).toList(),
+                  ),
+                );
+              }).toList(),
             ),
-          );
-        }).toList(),
+          ),
+        ],
       ),
     );
   }
