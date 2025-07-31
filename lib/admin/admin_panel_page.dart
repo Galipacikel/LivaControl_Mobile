@@ -26,6 +26,11 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
     'Avans ve Ödeme Talepleri',
   ];
 
+  // Tasarım sistemi renkleri
+  final Color mainColor = const Color(0xFFF57A20);
+  final Color secondaryColor = const Color(0xFF2C2B5B);
+  final Color bgColor = const Color(0xFFF6F2FF);
+
   List<ExpenseReport> _filterByCategory(String category) {
     return widget.allReports.where((r) => r.category == category).toList();
   }
@@ -78,27 +83,62 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Admin Paneli'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
+      backgroundColor: bgColor,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(80),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [mainColor, secondaryColor],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.arrow_back_ios,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  Expanded(
+                    child: Text(
+                      'Admin Paneli',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Inter',
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
-      backgroundColor: const Color(0xFFF7F7F7),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         children: categories.map((category) {
           final categoryReports = _filterByCategory(category);
           return Container(
-            margin: const EdgeInsets.only(bottom: 12),
+            margin: const EdgeInsets.only(bottom: 16),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
@@ -111,24 +151,26 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
+                        fontFamily: 'Inter',
                       ),
                     ),
                   ),
                   if (categoryReports.isNotEmpty)
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
+                        horizontal: 12,
+                        vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.orange.shade100,
-                        borderRadius: BorderRadius.circular(12),
+                        color: mainColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
                         categoryReports.length.toString(),
-                        style: const TextStyle(
-                          color: Color(0xFFF57A20),
+                        style: TextStyle(
+                          color: mainColor,
                           fontWeight: FontWeight.bold,
+                          fontSize: 14,
                         ),
                       ),
                     ),
@@ -140,25 +182,36 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                       const ListTile(
                         title: Text(
                           'Kayıt yok',
-                          style: TextStyle(color: Colors.grey),
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontFamily: 'Inter',
+                          ),
                         ),
                       ),
                     ]
                   : categoryReports.map((report) {
-                      return Card(
+                      return Container(
                         margin: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 6,
                         ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.grey.shade200,
+                            width: 1,
+                          ),
                         ),
-                        elevation: 2,
                         child: ListTile(
-                          tileColor: Colors.white,
+                          contentPadding: const EdgeInsets.all(16),
                           title: Text(
                             report.name,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              fontFamily: 'Inter',
+                            ),
                           ),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -166,29 +219,44 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                               if (report.expenses.isNotEmpty)
                                 Text(
                                   report.expenses.first.desc,
-                                  style: const TextStyle(fontSize: 13),
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey.shade600,
+                                    fontFamily: 'Inter',
+                                  ),
                                 ),
+                              const SizedBox(height: 4),
                               Text(
                                 'Tutar: ${report.totalAmount.toStringAsFixed(2)} ₺',
-                                style: const TextStyle(fontSize: 13),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: secondaryColor,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: 'Inter',
+                                ),
                               ),
                             ],
                           ),
                           trailing: Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
+                              horizontal: 12,
+                              vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color: _getStatusColor(report.status),
-                              borderRadius: BorderRadius.circular(12),
+                              color: _getStatusColor(report.status).withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: _getStatusColor(report.status),
+                                width: 1,
+                              ),
                             ),
                             child: Text(
                               _getStatusText(report.status),
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: _getStatusColor(report.status),
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
+                                fontFamily: 'Inter',
                               ),
                             ),
                           ),
@@ -220,7 +288,7 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
       case ExpenseReportStatus.rejected:
         return Colors.red;
       case ExpenseReportStatus.sent:
-        return const Color(0xFFF57A20);
+        return mainColor;
       default:
         return Colors.grey;
     }
@@ -255,114 +323,208 @@ class ExpenseDetailPage extends StatefulWidget {
 }
 
 class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
+  // Tasarım sistemi renkleri
+  final Color mainColor = const Color(0xFFF57A20);
+  final Color secondaryColor = const Color(0xFF2C2B5B);
+  final Color bgColor = const Color(0xFFF6F2FF);
+
   @override
   Widget build(BuildContext context) {
     final report = widget.report;
     final bool isAlreadyProcessed = report.status == ExpenseReportStatus.approved || 
                                    report.status == ExpenseReportStatus.rejected;
     final expense = report.expenses.isNotEmpty ? report.expenses.first : null;
+    
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Masraf Detayı'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
+      backgroundColor: bgColor,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(80),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [mainColor, secondaryColor],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.arrow_back_ios,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  Expanded(
+                    child: Text(
+                      'Masraf Detayı',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Inter',
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
-      backgroundColor: Colors.white,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Başlık
-            Text(
-              report.name,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            _buildDetailRow('Şirket Adı', report.name),
-            _buildDetailRow('Durumu', _getStatusText(report.status)),
-            _buildDetailRow('Değer', '${report.totalAmount.toStringAsFixed(2)} ₺'),
-            _buildDetailRow('Tarih', _formatDate(DateTime.now())),
-            _buildDetailRow('Açıklama', expense?.desc ?? ''),
-            _buildDetailRow('Kategori', report.category),
-            _buildDetailRow('KDV Vergisi', '10'),
-            if (expense?.rejectionReason != null && expense!.rejectionReason!.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 16, bottom: 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Reddedilme Nedeni',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.red,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      expense.rejectionReason!,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        color: Colors.red,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            const SizedBox(height: 24),
-            const Text(
-              'Ekli Makbuz',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
             Container(
               width: double.infinity,
-              height: 200,
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(8),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              child: expense != null && expense.imagePath != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.file(
-                        File(expense.imagePath!),
-                        width: double.infinity,
-                        height: 200,
-                        fit: BoxFit.contain,
-                      ),
-                    )
-                  : Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.image, size: 48, color: Colors.grey.shade400),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Makbuz görseli yok',
-                          style: TextStyle(color: Colors.grey.shade600),
-                        ),
-                      ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    report.name,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Inter',
                     ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildDetailRow('Şirket Adı', report.name),
+                  _buildDetailRow('Durumu', _getStatusText(report.status)),
+                  _buildDetailRow('Değer', '${report.totalAmount.toStringAsFixed(2)} ₺'),
+                  _buildDetailRow('Tarih', _formatDate(DateTime.now())),
+                  _buildDetailRow('Açıklama', expense?.desc ?? ''),
+                  _buildDetailRow('Kategori', report.category),
+                  _buildDetailRow('KDV Vergisi', '10'),
+                  if (expense?.rejectionReason != null && expense!.rejectionReason!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16, bottom: 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Reddedilme Nedeni',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red,
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            expense.rejectionReason!,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              color: Colors.red,
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
             ),
-            const SizedBox(height: 32),
+            
+            const SizedBox(height: 20),
+            
+            // Ekli makbuz
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Ekli Makbuz',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: expense != null && expense.imagePath != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.file(
+                              File(expense.imagePath!),
+                              width: double.infinity,
+                              height: 200,
+                              fit: BoxFit.contain,
+                            ),
+                          )
+                        : Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.image, size: 48, color: Colors.grey.shade400),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Makbuz görseli yok',
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontFamily: 'Inter',
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 20),
+            
+            // Durum mesajı (eğer zaten işlenmişse)
             if (isAlreadyProcessed) ...[
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: report.status == ExpenseReportStatus.approved 
                       ? Colors.green.shade50 
                       : Colors.red.shade50,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: report.status == ExpenseReportStatus.approved 
                         ? Colors.green.shade200 
@@ -391,23 +553,28 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                         color: report.status == ExpenseReportStatus.approved 
                             ? Colors.green 
                             : Colors.red,
+                        fontFamily: 'Inter',
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
             ],
+            
+            // Onayla/Reddet butonları
             Row(
               children: [
                 Expanded(
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: isAlreadyProcessed ? Colors.grey : Colors.green,
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
                       ),
+                      elevation: 0,
                     ),
                     onPressed: isAlreadyProcessed ? null : () {
                       try {
@@ -436,6 +603,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                         color: isAlreadyProcessed ? Colors.grey.shade600 : Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
+                        fontFamily: 'Inter',
                       ),
                     ),
                   ),
@@ -445,10 +613,12 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: isAlreadyProcessed ? Colors.grey : Colors.red,
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
                       ),
+                      elevation: 0,
                     ),
                     onPressed: isAlreadyProcessed ? null : () async {
                       final reason = await showDialog<String>(
@@ -496,6 +666,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                                                 fontSize: 20,
                                                 fontWeight: FontWeight.bold,
                                                 color: Colors.black87,
+                                                fontFamily: 'Inter',
                                               ),
                                             ),
                                             const SizedBox(height: 4),
@@ -504,6 +675,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                                               style: TextStyle(
                                                 fontSize: 14,
                                                 color: Colors.grey.shade600,
+                                                fontFamily: 'Inter',
                                               ),
                                             ),
                                           ],
@@ -533,17 +705,20 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                                         hintStyle: TextStyle(
                                           color: Colors.grey.shade500,
                                           fontSize: 14,
+                                          fontFamily: 'Inter',
                                         ),
                                         border: InputBorder.none,
                                         contentPadding: const EdgeInsets.all(16),
                                         counterStyle: TextStyle(
                                           color: Colors.grey.shade500,
                                           fontSize: 12,
+                                          fontFamily: 'Inter',
                                         ),
                                       ),
                                       style: const TextStyle(
                                         fontSize: 14,
                                         color: Colors.black87,
+                                        fontFamily: 'Inter',
                                       ),
                                       onChanged: (value) => inputReason = value,
                                     ),
@@ -568,6 +743,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                                               color: Colors.grey.shade600,
                                               fontWeight: FontWeight.w600,
                                               fontSize: 16,
+                                              fontFamily: 'Inter',
                                             ),
                                           ),
                                         ),
@@ -594,6 +770,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                                             style: TextStyle(
                                               fontWeight: FontWeight.w600,
                                               fontSize: 16,
+                                              fontFamily: 'Inter',
                                             ),
                                           ),
                                         ),
@@ -614,7 +791,10 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                               children: [
                                 Icon(Icons.check_circle, color: Colors.white, size: 20),
                                 const SizedBox(width: 12),
-                                const Text('Masraf reddedildi'),
+                                const Text(
+                                  'Masraf reddedildi',
+                                  style: TextStyle(fontFamily: 'Inter'),
+                                ),
                               ],
                             ),
                             backgroundColor: Colors.red,
@@ -642,6 +822,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
                         color: isAlreadyProcessed ? Colors.grey.shade600 : Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
+                        fontFamily: 'Inter',
                       ),
                     ),
                   ),
@@ -665,6 +846,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
+              fontFamily: 'Inter',
             ),
           ),
           Text(
@@ -672,6 +854,7 @@ class _ExpenseDetailPageState extends State<ExpenseDetailPage> {
             style: const TextStyle(
               fontSize: 16,
               color: Colors.black87,
+              fontFamily: 'Inter',
             ),
           ),
         ],
@@ -709,89 +892,172 @@ class ApprovalResultPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Tasarım sistemi renkleri
+    final Color mainColor = const Color(0xFFF57A20);
+    final Color secondaryColor = const Color(0xFF2C2B5B);
+    final Color bgColor = const Color(0xFFF6F2FF);
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Sonuç'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
+      backgroundColor: bgColor,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(80),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [mainColor, secondaryColor],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.arrow_back_ios,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  Expanded(
+                    child: Text(
+                      'Sonuç',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Inter',
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
-      backgroundColor: Colors.white,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Başlık
-            Text(
-              report.name,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            
-            // Detaylar
-            _buildDetailRow('Şirket Adı', report.name),
-            _buildDetailRow('Durumu', isApproved ? 'Onaylandı' : 'Reddedildi'),
-            _buildDetailRow('Değer', '${report.totalAmount.toStringAsFixed(2)} ₺'),
-            _buildDetailRow('Tarih', _formatDate(DateTime.now())),
-            _buildDetailRow('Açıklama', report.expenses.isNotEmpty ? report.expenses.first.desc : ''),
-            _buildDetailRow('Kategori', report.category),
-            _buildDetailRow('KDV Vergisi', '10'),
-            
-            const SizedBox(height: 24),
-            
-            // Ekli makbuz
-            const Text(
-              'Ekli Makbuz',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
             Container(
               width: double.infinity,
-              height: 200,
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(8),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              child: report.expenses.isNotEmpty && report.expenses.first.imagePath != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.file(
-                        File(report.expenses.first.imagePath!),
-                        width: double.infinity,
-                        height: 200,
-                        fit: BoxFit.contain,
-                      ),
-                    )
-                  : Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.image, size: 48, color: Colors.grey.shade400),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Makbuz görseli yok',
-                          style: TextStyle(color: Colors.grey.shade600),
-                        ),
-                      ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    report.name,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Inter',
                     ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildDetailRow('Şirket Adı', report.name),
+                  _buildDetailRow('Durumu', isApproved ? 'Onaylandı' : 'Reddedildi'),
+                  _buildDetailRow('Değer', '${report.totalAmount.toStringAsFixed(2)} ₺'),
+                  _buildDetailRow('Tarih', _formatDate(DateTime.now())),
+                  _buildDetailRow('Açıklama', report.expenses.isNotEmpty ? report.expenses.first.desc : ''),
+                  _buildDetailRow('Kategori', report.category),
+                  _buildDetailRow('KDV Vergisi', '10'),
+                ],
+              ),
             ),
             
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
+            
+            // Ekli makbuz
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Ekli Makbuz',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: report.expenses.isNotEmpty && report.expenses.first.imagePath != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.file(
+                              File(report.expenses.first.imagePath!),
+                              width: double.infinity,
+                              height: 200,
+                              fit: BoxFit.contain,
+                            ),
+                          )
+                        : Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.image, size: 48, color: Colors.grey.shade400),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Makbuz görseli yok',
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontFamily: 'Inter',
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 20),
             
             // Sonuç mesajı
             if (isApproved) ...[
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: Colors.green.shade50,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: Colors.green.shade200),
                 ),
                 child: Row(
@@ -804,6 +1070,7 @@ class ApprovalResultPage extends StatelessWidget {
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: Colors.green,
+                        fontFamily: 'Inter',
                       ),
                     ),
                   ],
@@ -812,10 +1079,10 @@ class ApprovalResultPage extends StatelessWidget {
             ] else ...[
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: Colors.red.shade50,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: Colors.red.shade200),
                 ),
                 child: Column(
@@ -831,6 +1098,7 @@ class ApprovalResultPage extends StatelessWidget {
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Colors.red,
+                            fontFamily: 'Inter',
                           ),
                         ),
                       ],
@@ -844,6 +1112,7 @@ class ApprovalResultPage extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 16,
                           color: Colors.red,
+                          fontFamily: 'Inter',
                         ),
                       ),
                     ],
@@ -852,18 +1121,20 @@ class ApprovalResultPage extends StatelessWidget {
               ),
             ],
             
-            const SizedBox(height: 32),
+            const SizedBox(height: 20),
             
             // Ana sayfaya dön butonu
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFF57A20),
+                  backgroundColor: mainColor,
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
                   ),
+                  elevation: 0,
                 ),
                 onPressed: () {
                   Navigator.popUntil(context, (route) => route.isFirst);
@@ -874,6 +1145,7 @@ class ApprovalResultPage extends StatelessWidget {
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
+                    fontFamily: 'Inter',
                   ),
                 ),
               ),
@@ -895,6 +1167,7 @@ class ApprovalResultPage extends StatelessWidget {
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
+              fontFamily: 'Inter',
             ),
           ),
           Text(
@@ -902,6 +1175,7 @@ class ApprovalResultPage extends StatelessWidget {
             style: const TextStyle(
               fontSize: 16,
               color: Colors.black87,
+              fontFamily: 'Inter',
             ),
           ),
         ],
