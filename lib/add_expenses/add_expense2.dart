@@ -377,6 +377,7 @@ class _AddExpense2PageState extends State<AddExpense2Page> {
                           'date': _selectedDate,
                           'desc': _descController.text,
                           'category': _selectedCategory,
+                          'imagePath': _image?.path,
                         };
                         Navigator.of(context).pop(expense);
                       },

@@ -9,7 +9,9 @@ class ExpenseItem {
   final String desc;
   final DateTime date;
   final String category;
+  final String? imagePath; // Resim yolu eklendi
   ExpenseReportStatus status;
+  String? rejectionReason; // Reddetme nedeni eklendi
 
   ExpenseItem({
     required this.vendor,
@@ -17,7 +19,9 @@ class ExpenseItem {
     required this.desc,
     required this.date,
     required this.category,
+    this.imagePath,
     this.status = ExpenseReportStatus.sent,
+    this.rejectionReason,
   });
 
   factory ExpenseItem.fromMap(Map<String, dynamic> map) {
@@ -27,12 +31,14 @@ class ExpenseItem {
       desc: map['desc'] ?? '',
       date: map['date'] ?? DateTime.now(),
       category: map['category'] ?? '',
+      imagePath: map['imagePath'],
       status: map['status'] != null
           ? ExpenseReportStatus.values.firstWhere(
               (e) => e.toString().split('.').last == map['status'],
               orElse: () => ExpenseReportStatus.sent,
             )
           : ExpenseReportStatus.sent,
+      rejectionReason: map['rejectionReason'],
     );
   }
 
@@ -42,7 +48,9 @@ class ExpenseItem {
     'desc': desc,
     'date': date,
     'category': category,
+    'imagePath': imagePath,
     'status': status.toString().split('.').last,
+    'rejectionReason': rejectionReason,
   };
 }
 
