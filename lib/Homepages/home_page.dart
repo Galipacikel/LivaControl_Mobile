@@ -62,53 +62,81 @@ class _HomePageState extends State<HomePage> {
     final isAdmin = user != null && user.role == 'admin';
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
-        actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.chat_bubble_outline,
-              color: Color(0xFFF57A20),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(80),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFFF57A20), Color(0xFF2C2B5B)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            tooltip: 'Sohbet',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ChatMainPage()),
-              );
-            },
           ),
-          if (isAdmin)
-            IconButton(
-              icon: const Icon(
-                Icons.admin_panel_settings,
-                color: Color(0xFF2C2B5B),
-              ),
-              tooltip: 'Admin Paneli',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => AdminPanelPage(
-                      allReports: widget.reports,
-                      onStatusChanged: (updatedReport) {
-                        final idx = widget.reports.indexWhere(
-                          (r) => r.name == updatedReport.name,
-                        );
-                        if (idx >= 0) {
-                          setState(() {
-                            widget.reports[idx] = updatedReport;
-                          });
-                        }
-                      },
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Ana Sayfa',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Inter',
+                        letterSpacing: 1.2,
+                      ),
                     ),
                   ),
-                );
-              },
+                  IconButton(
+                    icon: const Icon(
+                      Icons.chat_bubble_outline,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                    tooltip: 'Sohbet',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ChatMainPage()),
+                      );
+                    },
+                  ),
+                  if (isAdmin)
+                    IconButton(
+                      icon: const Icon(
+                        Icons.admin_panel_settings,
+                        color: Colors.white,
+                        size: 28,
+                      ),
+                      tooltip: 'Admin Paneli',
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => AdminPanelPage(
+                              allReports: widget.reports,
+                              onStatusChanged: (updatedReport) {
+                                final idx = widget.reports.indexWhere(
+                                  (r) => r.name == updatedReport.name,
+                                );
+                                if (idx >= 0) {
+                                  setState(() {
+                                    widget.reports[idx] = updatedReport;
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                ],
+              ),
             ),
-        ],
+          ),
+        ),
       ),
       backgroundColor: Colors.white,
       // drawer: Drawer(...), // Drawer'ı tamamen kaldırdım
@@ -124,23 +152,6 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Üst başlık ve bildirim + Çıkış
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Günaydın, ${widget.username}',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.black,
-                            fontFamily: 'Inter',
-                          ),
-                        ),
-                        // Bildirim ikonu tamamen kaldırıldı
-                      ],
-                    ),
-                    const SizedBox(height: 24),
                     // İstatistik kartları
                     Row(
                       children: [

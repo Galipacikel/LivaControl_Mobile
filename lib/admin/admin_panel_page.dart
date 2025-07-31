@@ -107,164 +107,190 @@ class _AdminPanelPageState extends State<AdminPanelPage>
             bottom: MediaQuery.of(context).viewInsets.bottom,
             left: 20,
             right: 20,
-            top: 24,
+            top: 16,
           ),
           child: StatefulBuilder(
             builder: (context, setState) {
               double approvedTotal = report.expenses
                   .where((e) => e.status == ExpenseReportStatus.approved)
                   .fold(0, (sum, e) => sum + e.amount);
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    report.name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
+              return ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.6,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      report.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Kategori: ${report.category}',
-                    style: const TextStyle(color: Colors.black54),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Onaylanan Toplam:',
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      Text(
-                        '${approvedTotal.toStringAsFixed(2)} ₺',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                  const Divider(height: 24),
-                  ...report.expenses.asMap().entries.map((entry) {
-
-                    final exp = entry.value;
-                    Color statusColor;
-                    String statusText;
-                    switch (exp.status) {
-                      case ExpenseReportStatus.approved:
-                        statusColor = Colors.green;
-                        statusText = 'Onaylandı';
-                        break;
-                      case ExpenseReportStatus.rejected:
-                        statusColor = Colors.red;
-                        statusText = 'Reddedildi';
-                        break;
-                      case ExpenseReportStatus.sent:
-                        statusColor = const Color(0xFFF57A20);
-                        statusText = 'Bekliyor';
-                        break;
-                      default:
-                        statusColor = Colors.grey;
-                        statusText = 'Bilinmiyor';
-                    }
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: ListTile(
-                        title: Text(
-                          exp.desc,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Kategori: ${report.category}',
+                      style: const TextStyle(color: Colors.black54),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Onaylanan Toplam:',
+                          style: TextStyle(fontWeight: FontWeight.w600),
                         ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Tutar: ${exp.amount.toStringAsFixed(2)} ₺'),
-                            Text('Satıcı: ${exp.vendor}'),
-                            Text(
-                              'Tarih: ${exp.date.day.toString().padLeft(2, '0')}/${exp.date.month.toString().padLeft(2, '0')}/${exp.date.year}',
-                            ),
-                            Text('Kategori: ${exp.category}'),
-                          ],
+                        Text(
+                          '${approvedTotal.toStringAsFixed(2)} ₺',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        trailing: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              statusText,
-                              style: TextStyle(
-                                color: statusColor,
-                                fontWeight: FontWeight.bold,
+                      ],
+                    ),
+                    const Divider(height: 16),
+                    Flexible(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: report.expenses.asMap().entries.map((entry) {
+                            final exp = entry.value;
+                            Color statusColor;
+                            String statusText;
+                            switch (exp.status) {
+                              case ExpenseReportStatus.approved:
+                                statusColor = Colors.green;
+                                statusText = 'Onaylandı';
+                                break;
+                              case ExpenseReportStatus.rejected:
+                                statusColor = Colors.red;
+                                statusText = 'Reddedildi';
+                                break;
+                              case ExpenseReportStatus.sent:
+                                statusColor = const Color(0xFFF57A20);
+                                statusText = 'Bekliyor';
+                                break;
+                              default:
+                                statusColor = Colors.grey;
+                                statusText = 'Bilinmiyor';
+                            }
+                            return Card(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                            ),
-                            if (exp.status == ExpenseReportStatus.sent) ...[
-                              const SizedBox(height: 8),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.check_circle,
-                                      color: Colors.green,
+                              child: ListTile(
+                                title: Text(
+                                  exp.desc,
+                                  style: const TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Tutar: ${exp.amount.toStringAsFixed(2)} ₺'),
+                                    Text('Satıcı: ${exp.vendor}'),
+                                    Text(
+                                      'Tarih: ${exp.date.day.toString().padLeft(2, '0')}/${exp.date.month.toString().padLeft(2, '0')}/${exp.date.year}',
                                     ),
-                                    tooltip: 'Onayla',
-                                    onPressed: () {
-                                      setState(() {
-                                        exp.status =
-                                            ExpenseReportStatus.approved;
-                                      });
-                                    },
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.cancel,
-                                      color: Colors.red,
+                                    Text('Kategori: ${exp.category}'),
+                                  ],
+                                ),
+                                trailing: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      statusText,
+                                      style: TextStyle(
+                                        color: statusColor,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
-                                    tooltip: 'Reddet',
-                                    onPressed: () {
-                                      setState(() {
-                                        exp.status =
-                                            ExpenseReportStatus.rejected;
-                                      });
-                                    },
-                                  ),
-                                ],
+                                    if (exp.status == ExpenseReportStatus.sent) ...[
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          GestureDetector(
+                                            onTap: () {
+                                              setState(() {
+                                                exp.status =
+                                                    ExpenseReportStatus.approved;
+                                              });
+                                            },
+                                            child: Container(
+                                              padding: const EdgeInsets.all(4),
+                                              decoration: BoxDecoration(
+                                                color: Colors.green,
+                                                borderRadius: BorderRadius.circular(4),
+                                              ),
+                                              child: const Icon(
+                                                Icons.check,
+                                                color: Colors.white,
+                                                size: 16,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          GestureDetector(
+                                            onTap: () {
+                                              setState(() {
+                                                exp.status =
+                                                    ExpenseReportStatus.rejected;
+                                              });
+                                            },
+                                            child: Container(
+                                              padding: const EdgeInsets.all(4),
+                                              decoration: BoxDecoration(
+                                                color: Colors.red,
+                                                borderRadius: BorderRadius.circular(4),
+                                              ),
+                                              child: const Icon(
+                                                Icons.close,
+                                                color: Colors.white,
+                                                size: 16,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                onTap: () {
+                                  // Gider kalemi detay modalı açılabilir
+                                },
                               ),
-                            ],
-                          ],
+                            );
+                          }).toList(),
                         ),
-                        onTap: () {
-                          // Gider kalemi detay modalı açılabilir
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFF57A20),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
                         },
-                      ),
-                    );
-                  }),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFF57A20),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: const Text(
-                        'Kapat',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                        child: const Text(
+                          'Kapat',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                    const SizedBox(height: 12),
+                  ],
+                ),
               );
             },
           ),
