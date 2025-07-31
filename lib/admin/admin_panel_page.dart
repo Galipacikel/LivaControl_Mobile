@@ -39,8 +39,438 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
   DateTime? _endDate;
   RangeValues _amountRange = const RangeValues(0, 10000);
 
+  // Toplu işlemler için state
+  bool _isSelectionMode = false;
+  Set<String> _selectedReports = <String>{};
+
   List<ExpenseReport> _filterByCategory(String category) {
     return widget.allReports.where((r) => r.category == category).toList();
+  }
+
+  void _toggleSelectionMode() {
+    setState(() {
+      _isSelectionMode = !_isSelectionMode;
+      if (!_isSelectionMode) {
+        _selectedReports.clear();
+      }
+    });
+  }
+
+  void _toggleReportSelection(String reportId) {
+    setState(() {
+      if (_selectedReports.contains(reportId)) {
+        _selectedReports.remove(reportId);
+      } else {
+        _selectedReports.add(reportId);
+      }
+    });
+  }
+
+  void _selectAllReports(List<ExpenseReport> reports) {
+    setState(() {
+      _selectedReports = reports.map((r) => r.id).toSet();
+    });
+  }
+
+  void _deselectAllReports() {
+    setState(() {
+      _selectedReports.clear();
+    });
+  }
+
+  void _showBulkActionDialog() {
+    if (_selectedReports.isEmpty) return;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: mainColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        Icons.batch_prediction,
+                        color: mainColor,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Toplu İşlem',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                          Text(
+                            '${_selectedReports.length} masraf seçildi',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade600,
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                // Action Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _bulkApprove();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        icon: const Icon(Icons.check_circle, size: 20),
+                        label: const Text(
+                          'Toplu Onayla',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _showBulkRejectDialog();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        icon: const Icon(Icons.cancel, size: 20),
+                        label: const Text(
+                          'Toplu Reddet',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    'İptal',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showBulkRejectDialog() {
+    final TextEditingController reasonController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.cancel_outlined,
+                        color: Colors.red,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Toplu Reddetme',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                          Text(
+                            'Reddetme nedenini belirtin',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // Reason Input
+                TextField(
+                  controller: reasonController,
+                  maxLines: 3,
+                  minLines: 3,
+                  maxLength: 200,
+                  decoration: InputDecoration(
+                    hintText: 'Reddetme nedenini yazın...',
+                    hintStyle: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontFamily: 'Inter',
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.red, width: 2),
+                    ),
+                    contentPadding: const EdgeInsets.all(16),
+                    counterStyle: TextStyle(
+                      color: Colors.grey.shade500,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontFamily: 'Inter',
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Action Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'İptal',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (reasonController.text.trim().isNotEmpty) {
+                            Navigator.pop(context);
+                            _bulkReject(reasonController.text.trim());
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text(
+                          'Reddet',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _bulkApprove() {
+    setState(() {
+      for (String reportId in _selectedReports) {
+        final idx = widget.allReports.indexWhere((r) => r.id == reportId);
+        if (idx != -1) {
+          widget.allReports[idx] = ExpenseReport(
+            id: widget.allReports[idx].id,
+            name: widget.allReports[idx].name,
+            status: ExpenseReportStatus.approved,
+            expenses: widget.allReports[idx].expenses,
+            totalAmount: widget.allReports[idx].totalAmount,
+            category: widget.allReports[idx].category,
+          );
+        }
+      }
+      _selectedReports.clear();
+      _isSelectionMode = false;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.white),
+            const SizedBox(width: 12),
+            Text(
+              '${_selectedReports.length} masraf onaylandı',
+              style: const TextStyle(
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
+  }
+
+  void _bulkReject(String reason) {
+    setState(() {
+      for (String reportId in _selectedReports) {
+        final idx = widget.allReports.indexWhere((r) => r.id == reportId);
+        if (idx != -1) {
+          final updatedExpenses = widget.allReports[idx].expenses.map((e) {
+            return ExpenseItem(
+              vendor: e.vendor,
+              amount: e.amount,
+              desc: e.desc,
+              date: e.date,
+              category: e.category,
+              imagePath: e.imagePath,
+              status: ExpenseReportStatus.rejected,
+              rejectionReason: reason,
+            );
+          }).toList();
+          
+          widget.allReports[idx] = ExpenseReport(
+            id: widget.allReports[idx].id,
+            name: widget.allReports[idx].name,
+            status: ExpenseReportStatus.rejected,
+            expenses: updatedExpenses,
+            totalAmount: widget.allReports[idx].totalAmount,
+            category: widget.allReports[idx].category,
+          );
+        }
+      }
+      _selectedReports.clear();
+      _isSelectionMode = false;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.cancel, color: Colors.white),
+            const SizedBox(width: 12),
+            Text(
+              '${_selectedReports.length} masraf reddedildi',
+              style: const TextStyle(
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
   }
 
   List<ExpenseReport> _getFilteredReports() {
@@ -468,6 +898,47 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                       ),
                     ),
                   ),
+                  if (_isSelectionMode)
+                    Row(
+                      children: [
+                        Text(
+                          '${_selectedReports.length}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Inter',
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.close,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                          onPressed: _toggleSelectionMode,
+                        ),
+                        if (_selectedReports.isNotEmpty)
+                          IconButton(
+                            icon: const Icon(
+                              Icons.check_circle,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                            onPressed: _showBulkActionDialog,
+                          ),
+                      ],
+                    )
+                  else
+                    IconButton(
+                      icon: const Icon(
+                        Icons.select_all,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                      onPressed: _toggleSelectionMode,
+                    ),
                 ],
               ),
             ),
@@ -844,6 +1315,71 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
             ),
           ),
           
+          // Toplu işlem bilgisi
+          if (_isSelectionMode)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              margin: const EdgeInsets.only(top: 8),
+              decoration: BoxDecoration(
+                color: mainColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: mainColor.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.select_all,
+                    color: mainColor,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      _selectedReports.isEmpty
+                          ? 'Seçim modu aktif - masrafları seçin'
+                          : '${_selectedReports.length} masraf seçildi',
+                      style: TextStyle(
+                        color: mainColor,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                  ),
+                  if (_selectedReports.isNotEmpty) ...[
+                    TextButton(
+                      onPressed: () {
+                        final filteredReports = _getFilteredReports();
+                        _selectAllReports(filteredReports);
+                      },
+                      child: Text(
+                        'Tümünü Seç',
+                        style: TextStyle(
+                          color: mainColor,
+                          fontSize: 12,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: _deselectAllReports,
+                      child: Text(
+                        'Temizle',
+                        style: TextStyle(
+                          color: mainColor,
+                          fontSize: 12,
+                          fontFamily: 'Inter',
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          
           // Filtre bilgisi
           if (_searchQuery.isNotEmpty || _selectedCategories.isNotEmpty || 
               _selectedStatuses.isNotEmpty || _startDate != null || _endDate != null)
@@ -957,6 +1493,18 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                         ),
                         child: ListTile(
                           contentPadding: const EdgeInsets.all(16),
+                          leading: _isSelectionMode
+                              ? Checkbox(
+                                  value: _selectedReports.contains(report.id),
+                                  onChanged: (value) {
+                                    _toggleReportSelection(report.id);
+                                  },
+                                  activeColor: mainColor,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                )
+                              : null,
                           title: Text(
                             report.name,
                             style: const TextStyle(
@@ -1012,17 +1560,19 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                               ),
                             ),
                           ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ExpenseDetailPage(
-                                  report: report,
-                                  onStatusChanged: _changeStatus,
-                                ),
-                              ),
-                            );
-                          },
+                          onTap: _isSelectionMode
+                              ? () => _toggleReportSelection(report.id)
+                              : () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => ExpenseDetailPage(
+                                        report: report,
+                                        onStatusChanged: _changeStatus,
+                                      ),
+                                    ),
+                                  );
+                                },
                         ),
                       );
                     }).toList(),
