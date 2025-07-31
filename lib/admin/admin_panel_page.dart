@@ -1336,25 +1336,27 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                     size: 20,
                   ),
                   const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      _selectedReports.isEmpty
-                          ? 'Seçim modu aktif - masrafları seçin'
-                          : '${_selectedReports.length} masraf seçildi',
-                      style: TextStyle(
-                        color: mainColor,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'Inter',
-                      ),
-                    ),
-                  ),
+                                     Expanded(
+                     child: Text(
+                       _selectedReports.isEmpty
+                           ? 'Seçim modu aktif - bekleyen masrafları seçin'
+                           : '${_selectedReports.length} bekleyen masraf seçildi',
+                       style: TextStyle(
+                         color: mainColor,
+                         fontSize: 14,
+                         fontWeight: FontWeight.w600,
+                         fontFamily: 'Inter',
+                       ),
+                     ),
+                   ),
                   if (_selectedReports.isNotEmpty) ...[
-                    TextButton(
-                      onPressed: () {
-                        final filteredReports = _getFilteredReports();
-                        _selectAllReports(filteredReports);
-                      },
+                                         TextButton(
+                       onPressed: () {
+                         final filteredReports = _getFilteredReports();
+                         // Sadece bekleyen masrafları seç
+                         final pendingReports = filteredReports.where((r) => r.status == ExpenseReportStatus.sent).toList();
+                         _selectAllReports(pendingReports);
+                       },
                       child: Text(
                         'Tümünü Seç',
                         style: TextStyle(
@@ -1496,9 +1498,11 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                           leading: _isSelectionMode
                               ? Checkbox(
                                   value: _selectedReports.contains(report.id),
-                                  onChanged: (value) {
-                                    _toggleReportSelection(report.id);
-                                  },
+                                  onChanged: report.status == ExpenseReportStatus.sent
+                                      ? (value) {
+                                          _toggleReportSelection(report.id);
+                                        }
+                                      : null, // Onaylanan/reddedilen masraflar için null
                                   activeColor: mainColor,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(4),
@@ -1561,7 +1565,9 @@ class _AdminPanelPageState extends State<AdminPanelPage> {
                             ),
                           ),
                           onTap: _isSelectionMode
-                              ? () => _toggleReportSelection(report.id)
+                              ? (report.status == ExpenseReportStatus.sent
+                                  ? () => _toggleReportSelection(report.id)
+                                  : null)
                               : () {
                                   Navigator.push(
                                     context,
